@@ -1,61 +1,37 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 /* eslint-disable */
 
 export const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const navigate = useNavigate();
+  const [msg, setMsg] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
+    setMsg('');
     try {
       const res = await fetch('https://spendsense-4elh.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       });
       const data = await res.json();
-
-      if (res.ok) {
-        setSuccess('Account created successfully! Redirecting...');
-        localStorage.setItem('user', JSON.stringify({ email: formData.email, name: formData.name }));
-        setTimeout(() => navigate('/dashboard'), 1500);
-      } else {
-        setError(data.error);
-      }
+      setMsg(data.message || data.error);
     } catch (err) {
-      setError('Could not connect to the server.');
+      setMsg('Can cannot connect to the server interface gateway.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-themeBg p-6">
-      <div className="bg-themePanel border border-themeLine p-8 rounded-2xl shadow-xl max-w-md w-full">
-        <h2 className="text-3xl font-bold font-serif text-themeInk mb-2 text-center">Create an Account</h2>
-        <p className="text-themeInkSoft text-sm text-center mb-6">Start managing your system today.</p>
-        
-        {error && <div className="bg-rose-50 border border-rose-200 text-themeNegative p-3 rounded-lg text-sm mb-4">{error}</div>}
-        {success && <div className="bg-emerald-50 border border-emerald-200 text-themePositive p-3 rounded-lg text-sm mb-4">{success}</div>}
-
+    <div className="min-h-screen flex items-center justify-center bg-stone-100 p-6 font-sans">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-stone-200">
+        <h2 className="text-2xl font-bold font-serif text-stone-900 mb-4 text-center">Create Account</h2>
+        {msg && <p className="mb-4 text-sm text-center font-bold text-orange-600">{msg}</p>}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label className="text-xs font-semibold text-themeInkSoft uppercase flex flex-col gap-1">
-            Full Name
-            <input type="text" required placeholder="John Doe" className="bg-themeBg border border-themeLine rounded-lg py-2.5 px-3 text-themeInk font-sans outline-none focus:border-themeAccent" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-          </label>
-          <label className="text-xs font-semibold text-themeInkSoft uppercase flex flex-col gap-1">
-            Email Address
-            <input type="email" required placeholder="name@example.com" className="bg-themeBg border border-themeLine rounded-lg py-2.5 px-3 text-themeInk font-sans outline-none focus:border-themeAccent" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-          </label>
-          <label className="text-xs font-semibold text-themeInkSoft uppercase flex flex-col gap-1">
-            Password
-            <input type="password" required placeholder="••••••••" className="bg-themeBg border border-themeLine rounded-lg py-2.5 px-3 text-themeInk font-sans outline-none focus:border-themeAccent" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
-          </label>
-          <button type="submit" className="bg-[#FF6B4A] text-white py-3 rounded-xl font-bold mt-2 shadow-md hover:bg-[#E85A3A] text-sm font-mediumopacity-90 transition">Sign Up</button>
+          <input type="text" placeholder="Name" required className="border p-3 rounded-xl bg-stone-50" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          <input type="email" placeholder="Email" required className="border p-3 rounded-xl bg-stone-50" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+          <input type="password" placeholder="Password" required className="border p-3 rounded-xl bg-stone-50" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+          <button type="submit" className="bg-[#FF6B4A] text-white py-3 rounded-xl font-bold hover:opacity-90 transition">Sign Up</button>
         </form>
         <p className="text-sm text-themeInkSoft text-center mt-6">Already have an account? <Link to="/login" className="text-themeAccent font-semibold underline">Log in</Link></p>
       </div>
