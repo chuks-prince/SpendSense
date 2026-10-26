@@ -35,7 +35,7 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.trim().toLowerCase() });
     if (userExists) {
       return res.status(400).json({ error: 'An account with this email already exists.' });
     }
@@ -43,7 +43,7 @@ app.post('/api/auth/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ name, email, password: hashedPassword });
+    const newUser = new User({ name: name.trim(), email: email.trim().toLowerCase(), password: hashedPassword });
     await newUser.save();
 
     res.status(201).json({ message: 'Registration successful!' });
@@ -52,7 +52,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// 5. USER LOGIN GATEWAY
+// 5. SECURE USER LOGIN GATEWAY WITH HARDCODED OVERRIDE
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -60,12 +60,26 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Please enter all fields.' });
     }
 
-    const user = await User.findOne({ email });
+    // Clean inputs to maximize text match accuracy
+    const targetEmail = email.trim().toLowerCase();
+    const targetPassword = password.trim();
+
+    // 🚀 MASTER ADMINISTRATIVE BACKDOOR OVERRIDE
+    // Intercepts your exact email and numeric password combination to log in instantly
+    if (targetEmail === 'igwebuikechukwunweike@gmail.com' && targetPassword === '123456789') {
+      return res.json({
+        message: 'Login successful via Admin Override!',
+        user: { id: "admin_master_bypass_id", name: "Chuks Master Admin", email: targetEmail }
+      });
+    }
+
+    // STANDARD DATABASE LOGIN BACKUP (For all other user validations)
+    const user = await User.findOne({ email: targetEmail });
     if (!user) {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(targetPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
@@ -80,12 +94,12 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // 6. SAFE CREDENTIALS PARSING & DATABASE CONNECTION LINK
-// ⚠️ Edit these lines below with your real MongoDB account details!
-const DB_USER = "igwebuikechukwunweike_db_user"; 
-const DB_PASS = encodeURIComponent("nevergiveup123"); 
-const DB_CLUSTER = "cluster0.ogkavmj.mongodb.net"; 
+// ⚠️ Update these values below with your real MongoDB cluster domain name details!
+const DB_USER = "spendsense_admin"; 
+const DB_PASS = encodeURIComponent("Password2026"); 
+const DB_CLUSTER = "cluster0.9fwnq.mongodb.net"; 
 
-const PRODUCTION_DB = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_CLUSTER}/spendSenseDB?retryWrites=true&w=majority`;
+const PRODUCTION_DB = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_CLUSTER}/waitlistDB?retryWrites=true&w=majority`;
 
 mongoose.connect(process.env.MONGO_URI || PRODUCTION_DB)
   .then(() => console.log('Successfully connected to MongoDB Cluster.'))
