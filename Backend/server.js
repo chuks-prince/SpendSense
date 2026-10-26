@@ -6,8 +6,19 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors()); // Allows your React app to communicate with this API
-app.use(express.json()); // Parses incoming JSON payloads
+// 1. OPTIMIZED CORS LAYER (Allows both local testing and live web clients)
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json());
+
+// 2. ROOT DISCOVERY PATH (Clears the "Cannot GET /" screen)
+app.get('/', (req, res) => {
+  res.json({ status: "Online", message: "SpendSense API is running perfectly!" });
+});
 
 // MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/waitlistDB';
