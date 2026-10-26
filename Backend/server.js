@@ -1,75 +1,50 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+const bcrypt = require('bcryptjs');
+
+// Standard user schema model fallback layout embedded directly to avoid import drops
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+});
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 const app = express();
-
-// Middleware
-// 1. OPTIMIZED CORS LAYER (Allows both local testing and live web clients)
-app.use(cors({
-  origin: '*', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// 2. ROOT DISCOVERY PATH (Clears the "Cannot GET /" screen)
+// Main Root Discovery Verification Route
 app.get('/', (req, res) => {
   res.json({ status: "Online", message: "SpendSense API is running perfectly!" });
 });
 
-// MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/waitlistDB';
-mongoose.connect(MONGO_URI)
-  .then(() => console.log('Successfully connected to MongoDB.'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-// Schema & Model for Waitlist
-const waitlistSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true
-  },
-  joinedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
-
-const WaitlistUser = mongoose.model('WaitlistUser', waitlistSchema);
-
-// API Route: Handle Waitlist Form Submission
-app.post('/api/waitlist', async (req, res) => {
+// --- PRODUCTION USER REGISTRATION GATEWAY ---
+app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required.' });
-    }
+    const userExists = await User.findOne({ email });
+    if (userExists) return res.status(400).json({ error: 'User already exists' });
 
-    // Check if email already registered
-    const existingUser = await WaitlistUser.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'This email is already on the waitlist!' });
-    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Save new user
-    const newUser = new WaitlistUser({ email });
+    const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
 
-    res.status(201).json({ message: 'Success! You have been added to the waitlist.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error. Please try again later.' });
+    res.status(201).json({ message: 'Registration successful!' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server registration error' });
   }
 });
 
-// Start Server
+// Connect directly to variable process contexts
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/waitlistDB')
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error(err));
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Active on port ${PORT}`));
