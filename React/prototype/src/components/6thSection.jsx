@@ -12,7 +12,7 @@ export const Waitlist = () => {
     setIsError(false);
 
     try {
-      const response = await fetch('https://spendsense-4elh.onrender.com', {
+      const response = await fetch('https://spendsense-4elh.onrender.com/api/waitlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

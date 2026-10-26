@@ -12,7 +12,7 @@ export const Login = () => {
     setError('');
 
     try {
-      const res = await fetch('https://spendsense-4elh.onrender.com', {
+      const res = await fetch('https://spendsense-4elh.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
