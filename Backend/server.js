@@ -79,9 +79,13 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// 6. MONGO_URI CLUSTER DEPLOYMENT CONNECTION LINK
-// Fallback is automatically applied if the Render system variable is not selected
-const PRODUCTION_DB = 'mongodb+srv://igwebuikechukwunweike_db_user:nevergiveup123@cluster0.ogkavmj.mongodb.net/';
+// 6. SAFE CREDENTIALS PARSING & DATABASE CONNECTION LINK
+// ⚠️ Edit these lines below with your real MongoDB account details!
+const DB_USER = "igwebuikechukwunweike_db_user"; 
+const DB_PASS = encodeURIComponent("nevergiveup123"); 
+const DB_CLUSTER = "cluster0.ogkavmj.mongodb.net"; 
+
+const PRODUCTION_DB = `mongodb+srv://${DB_USER}:${DB_PASS}@${DB_CLUSTER}/spendSenseDB?retryWrites=true&w=majority`;
 
 mongoose.connect(process.env.MONGO_URI || PRODUCTION_DB)
   .then(() => console.log('Successfully connected to MongoDB Cluster.'))
